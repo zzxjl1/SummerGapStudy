@@ -1,0 +1,121 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- <PreferenceCategory app:title="@string/messages_header">
+
+        <EditTextPreference
+            app:key="signature"
+            app:title="@string/signature_title"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="reply"
+            app:entries="@array/reply_entries"
+            app:entryValues="@array/reply_values"
+            app:key="reply"
+            app:title="@string/reply_title"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/sync_header">
+
+        <SwitchPreferenceCompat
+            app:key="sync"
+            app:title="@string/sync_title" />
+
+        <SwitchPreferenceCompat
+            app:dependency="sync"
+            app:key="attachment"
+            app:summaryOff="@string/attachment_summary_off"
+            app:summaryOn="@string/attachment_summary_on"
+            app:title="@string/attachment_title" />
+
+    </PreferenceCategory>
+-->
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="@string/common">
+
+        <SwitchPreferenceCompat
+            app:defaultValue="false"
+            app:iconSpaceReserved="false"
+            app:key="volume_lock"
+            app:summary="@string/volume_lock_summary"
+            app:title="@string/volume_lock_title" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="@string/network">
+
+        <EditTextPreference
+            app:defaultValue="@string/http_base_url_default"
+            app:iconSpaceReserved="false"
+            app:key="http_base_url"
+            app:title="@string/http_base_url"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            app:defaultValue="@string/ws_base_url_default"
+            app:iconSpaceReserved="false"
+            app:key="ws_base_url"
+            app:title="@string/ws_base_url"
+            app:useSimpleSummaryProvider="true" />
+        <Preference
+            android:title="@string/back_to_default"
+            app:iconSpaceReserved="false"
+            android:key="back_to_default_btn"
+            />
+        <!--
+        <ListPreference
+            app:defaultValue="reply"
+            app:iconSpaceReserved="false"
+            app:entries="@array/reply_entries"
+            app:entryValues="@array/reply_values"
+            app:key="reply"
+            app:title="@string/reply_title"
+            app:useSimpleSummaryProvider="true"/>
+         -->
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:allowDividerAbove="false"
+        app:iconSpaceReserved="false"
+        app:title="@string/debug_header">
+
+
+        <Preference
+            app:iconSpaceReserved="false"
+            app:key="pref_system_release"
+            app:persistent="false"
+            app:selectable="false"
+            app:title="SYSTEM RELEASE" />
+
+        <Preference
+            app:iconSpaceReserved="false"
+            app:key="pref_device_brand"
+            app:persistent="false"
+            app:selectable="false"
+            app:title="DEVICE BRAND" />
+
+        <Preference
+            app:iconSpaceReserved="false"
+            app:key="pref_device_model"
+            app:persistent="false"
+            app:selectable="false"
+            app:title="DEVICE MODEL" />
+
+        <Preference
+            app:iconSpaceReserved="false"
+            app:key="pref_app_version"
+            app:persistent="false"
+            app:selectable="false"
+            app:title="APP VERSION" />
+    </PreferenceCategory>
+
+
+
+</PreferenceScreen>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/backButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        app:backgroundTint="@color/lightcyan"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="12dp"
+        android:src="@mipmap/back" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/assistButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        app:backgroundTint="@color/gray"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="12dp"
+        android:src="@mipmap/assist" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/flashButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        app:backgroundTint="@color/gray"
+        android:layout_marginTop="12dp"
+        android:layout_marginRight="25dp"
+        android:layout_toLeftOf="@id/assistButton"
+        android:src="@mipmap/flash_on" />
+
+
+    <com.idealbroker.aisee.opencv.Camera2View
+        android:id="@+id/CameraView"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_alignParentStart="true"
+        android:layout_gravity="start"
+        android:visibility="visible">
+
+    </com.idealbroker.aisee.opencv.Camera2View>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/captureButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            app:fabCustomSize="90dp"
+            app:maxImageSize="50dp"
+            android:clickable="true"
+            android:src="@mipmap/camera" />
+    </LinearLayout>
+
+
+</RelativeLayout>
+
+

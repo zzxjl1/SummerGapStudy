@@ -1,0 +1,11 @@
+fastapi==0.78.0
+matplotlib==3.5.2
+numpy==1.23.0
+PyMySQL==1.0.2
+qqwry-py3==1.2.1
+requests==2.18.4
+requests-toolbelt==0.9.1
+SQLAlchemy==1.4.37
+uvicorn==0.17.6
+uvloop==0.16.0
+websockets==10.3

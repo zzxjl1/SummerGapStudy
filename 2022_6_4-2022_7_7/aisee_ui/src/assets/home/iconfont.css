@@ -1,0 +1,71 @@
+@font-face {
+  font-family: "iconfont"; /* Project id 3458029 */
+  src: url('iconfont.woff2?t=1655635908571') format('woff2'),
+       url('iconfont.woff?t=1655635908571') format('woff'),
+       url('iconfont.ttf?t=1655635908571') format('truetype');
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-backward:before {
+  content: "\e61a";
+}
+
+.icon-forward:before {
+  content: "\e69a";
+}
+
+.icon-pause:before {
+  content: "\e6ed";
+}
+
+.icon-play:before {
+  content: "\e6f9";
+}
+
+.icon-like:before {
+  content: "\e73b";
+}
+
+.icon-top:before {
+  content: "\e619";
+}
+
+.icon-star:before {
+  content: "\e7df";
+}
+
+.icon-star-fill:before {
+  content: "\e86b";
+}
+
+.icon-speak:before {
+  content: "\e600";
+}
+
+.icon-clock:before {
+  content: "\e6aa";
+}
+
+.icon-comment:before {
+  content: "\e7b5";
+}
+
+.icon-like-fill:before {
+  content: "\e869";
+}
+
+.icon-unlike-fill:before {
+  content: "\e86a";
+}
+
+.icon-view:before {
+  content: "\e692";
+}
+
