@@ -1,10 +1,12 @@
 import os
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import REAL, TEXT, create_engine
+from sqlalchemy import REAL, TEXT, INTEGER, ForeignKey, create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column
 from sqlalchemy import event
-import datetime
+from sqlalchemy.orm import relationship
+
+
 Base = declarative_base()
 
 
@@ -13,10 +15,12 @@ def validate_int(value):
         assert isinstance(value, int)
     return value
 
+
 def validate_float(value):
     if value is not None:
         assert isinstance(value, float) or isinstance(value, int)
     return value
+
 
 def validate_string(value):
     if value is not None:
@@ -25,12 +29,14 @@ def validate_string(value):
 
 
 validators = {
-    Integer: validate_int,
+    INTEGER: validate_int,
     TEXT: validate_string,
     REAL: validate_float,
 }
 
 """类型校验监听"""
+
+
 @event.listens_for(Base, 'attribute_instrument')
 def configure_listener(class_, key, inst):
     if not hasattr(inst.property, 'columns'):
@@ -45,34 +51,38 @@ def configure_listener(class_, key, inst):
             return value
 
 
-class Point(Base):
+class Section(Base):
 
-    __tablename__ = 'points'
+    __tablename__ = 'sections'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(INTEGER, primary_key=True)
     name = Column(TEXT)
-    collection_count = Column(Integer)
-    formation_ids = Column(TEXT)
-    formaton_count = Column(Integer)
-    main_formation_id = Column(Integer)
-    fossil_count = Column(Integer)
+    collection_count = Column(INTEGER)
+    #formation_ids = Column(TEXT)
+    formaton_count = Column(INTEGER)
+    main_formation_id = Column(INTEGER)
+    fossil_count = Column(INTEGER)
     longitude = Column(REAL)
     latitude = Column(REAL)
+
+    formation_ids = relationship("Formation", back_populates="section")
+    units = relationship("Unit", back_populates="section")
+
 
 class Formation(Base):
 
     __tablename__ = 'formations'
 
-    id = Column(Integer, primary_key=True)#
-    #ref_id = Column(Integer)
-    section_id = Column(Integer)#
-    geology_id = Column(Integer)
+    id = Column(INTEGER, primary_key=True)
+    #ref_id = Column(INTEGER)
+    section_id = Column(INTEGER, ForeignKey('sections.id'))
+    #geology_id = Column(INTEGER)
     geology_location = Column(TEXT)
     geology_locality = Column(TEXT)
     group = Column(TEXT)
     member = Column(TEXT)
-    no = Column(Integer)
-    name = Column(TEXT)#
+    no = Column(INTEGER)
+    name = Column(TEXT)
     bed = Column(TEXT)
     overlying = Column(TEXT)
     underline = Column(TEXT)
@@ -81,32 +91,44 @@ class Formation(Base):
     longitude = Column(REAL)
     latitude = Column(REAL)
     thick_sign = Column(TEXT)
-    thick = Column(REAL)#
+    thick = Column(REAL)
     thick_unit = Column(TEXT)
     conta_base = Column(TEXT)
     paleoenvironment = Column(TEXT)
-    accessibility = Column(Integer)
+    accessibility = Column(INTEGER)
     release_date = Column(TEXT)
     early_interval = Column(TEXT)
     intage_max = Column(TEXT)
     epoch_max = Column(TEXT)
     emlperiod_max = Column(TEXT)
     period_max = Column(TEXT)
-    early_age = Column(REAL)#
-    late_age = Column(REAL)#
+    early_age = Column(REAL)
+    late_age = Column(REAL)
     age_color = Column(TEXT)
     erathem_max = Column(TEXT)
-    section_name = Column(TEXT)#
+    section_name = Column(TEXT)
+
+    section = relationship("Section", back_populates="formation_ids")
+    units = relationship("Unit", back_populates="formation")
+
+
+class SectionFormationMapping(Base):
+    __tablename__ = 'section_formation_mapping'
+
+    section_id = Column(INTEGER, ForeignKey('sections.id'), primary_key=True)
+    formation_id = Column(INTEGER, ForeignKey(
+        'formations.id'), primary_key=True)
+
 
 class Unit(Base):
 
     __tablename__ = 'units'
 
-    id = Column(Integer, primary_key=True)
-    no = Column(Integer)
-    formation_id = Column(Integer)
-    #ref_id = Column(Integer)
-    section_id = Column(Integer)
+    id = Column(INTEGER, primary_key=True)
+    no = Column(INTEGER)
+    formation_id = Column(INTEGER, ForeignKey('formations.id'))
+    #ref_id = Column(INTEGER)
+    section_id = Column(INTEGER, ForeignKey('sections.id'))
     sum = Column(REAL)
     thick_sign = Column(TEXT)
     thick = Column(REAL)
@@ -118,6 +140,9 @@ class Unit(Base):
     early_interval = Column(TEXT)
     early_age = Column(REAL)
     late_age = Column(REAL)
+
+    formation = relationship("Formation", back_populates="units")
+    section = relationship("Section", back_populates="units")
 
 
 path = os.path.abspath(__file__)  # 获取当前文件的绝对路径
@@ -134,7 +159,7 @@ session = Session()
 
 
 #######################
-# TODO: 
+# TODO:
 # 1.FOREIGN KEY
 # 2.SQLALCHEMY RELATION
 #######################

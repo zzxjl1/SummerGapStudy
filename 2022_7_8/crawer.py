@@ -27,7 +27,7 @@ class Crawer(object):
         print('正在获取点数据...')
         try:
             self.points = requests.get(
-                self.points_url, timeout=self.timeout).json()  # [:20]#debug only
+                self.points_url, timeout=self.timeout).json()[:10]#debug only
             print('获取点数据成功！')
         except Exception as e:
             print('获取点数据失败：', e)
@@ -35,24 +35,27 @@ class Crawer(object):
     def save_points(self):
         assert self.points
 
-        print('Step 1: 正在将点数据写入数据库...')
+        print('\nStep 1: 正在将点数据写入数据库...')
         progress_bar_wrapper = alive_it(self.points, dual_line=True)
         for point in progress_bar_wrapper:
             name = point["name"]
             p = re.compile(r"[(](.*?)[)]", re.S)
+            section_id = int(re.findall(p, name)[0])
             progress_bar_wrapper.text = f'-> 正在将点 {name} 插入points表'
             curd.insert_point(
-                id=int(re.findall(p, name)[0]),
+                id=section_id,
                 name=" ".join(name.split(" ")[2:]),
                 collection_count=int(point["collection_count"]),
-                formation_ids=point["formation_ids"],
+                #formation_ids=point["formation_ids"],
                 formaton_count=point["count"],
                 main_formation_id=point["formation_id"],
                 fossil_count=int(point["fossilCount"]),
                 longitude=float(point["value"][0]),
                 latitude=float(point["value"][1])
             )
-        print('点数据写入完成！')
+            for formation_id in point["formation_ids"].split(","):
+                curd.insert_section_formation_mapping(
+                    section_id=section_id, formation_id=int(formation_id))
 
     def fetch_formations(self, id_list: list[int]):
         ids = list(map(str, id_list))
@@ -97,7 +100,7 @@ class Crawer(object):
     def save_formations(self):
         assert self.points
 
-        print('Step 2: 正在解析所有formation...')
+        print('\nStep 2: 正在解析所有formation...')
         self.formation_ids = []
         for point in self.points:
             for formation_id in point["formation_ids"].split(","):
@@ -120,7 +123,7 @@ class Crawer(object):
                         id=formation['formation_id'],
                         # ref_id=formation['ref_id'],
                         section_id=formation['section_basic_id'],
-                        geology_id=formation['geology_id'],
+                        #geology_id=formation['geology_id'],
                         geology_location=formation['geology_location'],
                         geology_locality=formation['geology_locality'],
                         group=formation['formation_group'],
@@ -175,11 +178,11 @@ class Crawer(object):
     def save_units(self):
         assert self.formation_ids  # 必须先解析完formation
 
-        print('Step 3: 正在解析所有unit...')
+        print('\nStep 3: 正在解析所有unit...')
         print("由于并发限制，请耐心等待")
         progress_bar_wrapper = alive_it(self.formation_ids, dual_line=True)
         for formation_id in progress_bar_wrapper:
-            progress_bar_wrapper.text = f'正在处理 formation id: {formation_id} 的units'
+            progress_bar_wrapper.text = f'-> 正在处理 formation id: {formation_id} 的units'
             units = self.fetch_units(formation_id)
             for unit in units:
                 curd.insert_unit(
@@ -206,7 +209,7 @@ class Crawer(object):
         self.save_points()
         self.save_formations()
         self.save_units()
-        print('Done! 操作全部完成')
+        print('\nDone! 操作全部完成!')
 
 
 if __name__ == '__main__':

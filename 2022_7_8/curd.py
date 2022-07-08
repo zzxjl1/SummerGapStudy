@@ -1,12 +1,12 @@
 from sqlalchemy import exists
-from db import Base,engine,Point,Formation,Unit,session
+from db import Base,engine,Section,Formation,Unit,SectionFormationMapping,session
 
 def flush():
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine, checkfirst=False)
 
 def insert_point(**args):
-    point = Point(**args)
+    point = Section(**args)
     session.add(point)
     session.commit()
 
@@ -23,3 +23,11 @@ def insert_unit(**args):
     unit = Unit(**args)
     session.add(unit)
     session.commit()
+
+def insert_section_formation_mapping(**args):
+    mapping = SectionFormationMapping(**args)
+    session.add(mapping)
+    session.commit()
+
+if __name__ == "__main__":
+    flush()
