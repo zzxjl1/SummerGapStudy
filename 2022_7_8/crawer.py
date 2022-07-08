@@ -27,7 +27,7 @@ class Crawer(object):
         print('正在获取点数据...')
         try:
             self.points = requests.get(
-                self.points_url, timeout=self.timeout).json()[:10]#debug only
+                self.points_url, timeout=self.timeout).json()#[:10]#debug only
             print('获取点数据成功！')
         except Exception as e:
             print('获取点数据失败：', e)
