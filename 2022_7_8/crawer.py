@@ -1,4 +1,3 @@
-import datetime
 import json
 import re
 import time
@@ -41,7 +40,7 @@ class Crawer(object):
             name = point["name"]
             p = re.compile(r"[(](.*?)[)]", re.S)
             section_id = int(re.findall(p, name)[0])
-            progress_bar_wrapper.text = f'-> 正在将点 {name} 插入points表'
+            progress_bar_wrapper.text = f'-> 正在将点 {name} 插入sections表'
             curd.insert_point(
                 id=section_id,
                 name=" ".join(name.split(" ")[2:]),
