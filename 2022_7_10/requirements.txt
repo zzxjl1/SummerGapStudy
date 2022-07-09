@@ -1,0 +1,4 @@
+faker
+alive_progress
+requests
+websockets
