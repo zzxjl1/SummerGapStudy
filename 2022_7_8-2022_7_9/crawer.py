@@ -17,7 +17,8 @@ class Crawer(object):
         self.units_url = 'http://geobiodiversity.com/api/search/map/units'
         self.collections_url = 'http://geobiodiversity.com/api/search/collectionList'
         self.fossils_url = 'http://geobiodiversity.com/api/search/fossilList'
-        self.fetch_fine_location = False  # 是否获取详细地址（耗时较多）
+        self.fetch_fine_location = True  # 是否获取详细地址（耗时较多）
+        self.generate_section_formation_mapping = True  # 是否生成映射关系
         self.fetch_formation_threshold = 100  # 每次从接口获取多少个formation
         self.fetch_page_size = 10  # 每次从接口获取多少个unit
         self.points = None  # 网页上绘制的所有点
@@ -57,7 +58,7 @@ class Crawer(object):
         """获取网页http://geobiodiversity.com/上绘制的所有点"""
         print('正在获取点数据...')
         try:
-            self.points = self.http_get(self.points_url)[:100]  # debug only
+            self.points = self.http_get(self.points_url)[:10]  # debug only
             print('获取点数据成功！')
         except Exception as e:
             print('获取点数据失败：', e)
@@ -86,10 +87,11 @@ class Crawer(object):
                 latitude=float(point["value"][1])
             )
 
-            for formation_id in point["formation_ids"].split(","):  # 生成映射关系
-                progress_bar_wrapper.text = f'-> 正在将映射 {section_id} to {formation_id} 插入sections表'
-                curd.insert_section_formation_mapping(
-                    section_id=section_id, formation_id=int(formation_id))
+            if self.generate_section_formation_mapping:  # 生成映射关系
+                for formation_id in point["formation_ids"].split(","):
+                    progress_bar_wrapper.text = f'-> 正在将映射 {section_id} to {formation_id} 插入sections表'
+                    curd.insert_section_formation_mapping(
+                        section_id=section_id, formation_id=int(formation_id))
 
     def fetch_formations(self, id_list: list[int]):
         """"利用分页接口批量获取formation数据(一页获取所有)"""
@@ -353,6 +355,11 @@ class Crawer(object):
                     type=fossil['taxon_type'],
                 )
 
+    def on_finish(self):
+        if not self.generate_section_formation_mapping:
+            curd.disable_section_formation_mapping()
+        print('\nDone! 操作全部完成!')
+
     def run(self):
         self.fetch_points()
         self.save_points()
@@ -360,7 +367,8 @@ class Crawer(object):
         self.save_units()
         self.save_collections()
         self.save_fossils()
-        print('\nDone! 操作全部完成!')
+
+        self.on_finish()
 
 
 if __name__ == '__main__':

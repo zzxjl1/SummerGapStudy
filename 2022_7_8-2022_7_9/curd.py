@@ -7,6 +7,11 @@ def flush():
     Base.metadata.create_all(engine, checkfirst=False)
 
 
+def disable_section_formation_mapping():
+    # drop table section_formation_mapping
+    session.execute("DROP TABLE section_formation_mapping")
+
+
 def insert_point(**args):
     is_exist = session.query(exists().where(Section.id == args["id"])).scalar()
     if is_exist:
