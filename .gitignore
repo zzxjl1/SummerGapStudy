@@ -128,3 +128,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 2022_7_8/geo.db-journal
+.DS_Store

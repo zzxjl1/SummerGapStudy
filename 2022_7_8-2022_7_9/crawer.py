@@ -4,6 +4,8 @@ import time
 import requests
 from alive_progress import alive_it
 import curd
+from faker import Faker
+fake = Faker()
 
 
 class Crawer(object):
@@ -13,23 +15,35 @@ class Crawer(object):
         self.formations_url = 'http://geobiodiversity.com/api/search/map/searchFormationByIds'
         self.section_url = 'http://geobiodiversity.com/api/search/map/section'
         self.units_url = 'http://geobiodiversity.com/api/search/map/units'
+        self.collections_url = 'http://geobiodiversity.com/api/search/collectionList'
+        self.fossils_url = 'http://geobiodiversity.com/api/search/fossilList'
         self.fetch_fine_location = False  # 是否获取详细地址（耗时较多）
         self.fetch_formation_threshold = 100  # 每次从接口获取多少个formation
-        self.fetch_units_page_size = 10  # 每次从接口获取多少个unit
+        self.fetch_page_size = 10  # 每次从接口获取多少个unit
         self.points = None  # 网页上绘制的所有点
         self.formation_ids = None  # 所有出现在points中的formation id
-        self.units = None
-        self.anti_block_interval = .5  # 请求间隔时间
+        self.units = None  # 所有出现在foramtions中的unit
+        self.collections = None  # 所有出现在units中的collection
+        self.fossils = None  # 所有出现在collections中的fossil
+        self.anti_block_interval = .6  # 请求间隔时间
         self.block_recover_interval = 10  # 等待屏蔽恢复的间隔时间
 
         curd.flush()  # 初始化数据库（清空）
+
+    @staticmethod
+    def get_headers():
+        headers = {
+            'User-Agent': fake.user_agent(),
+        }
+
+        return headers
 
     def http_get(self, url, params=None):
         """通用get请求"""
         while True:
             try:
                 response = requests.get(
-                    url, params=params, timeout=self.timeout)
+                    url, params=params, timeout=self.timeout, headers=self.get_headers())
                 return response.json()
             except requests.JSONDecodeError:
                 if "RAYCC" in response.text:
@@ -39,12 +53,11 @@ class Crawer(object):
                 print("按回车重试...")
                 input()
 
-
     def fetch_points(self):
         """获取网页http://geobiodiversity.com/上绘制的所有点"""
         print('正在获取点数据...')
         try:
-            self.points = self.http_get(self.points_url)  # [:100]#debug only
+            self.points = self.http_get(self.points_url)[:100]  # debug only
             print('获取点数据成功！')
         except Exception as e:
             print('获取点数据失败：', e)
@@ -59,6 +72,7 @@ class Crawer(object):
             name = point["name"]
             p = re.compile(r"[(](.*?)[)]", re.S)  # 正则匹配括号内的内容
             section_id = int(re.findall(p, name)[0])
+            point["id"] = section_id
             progress_bar_wrapper.text = f'-> 正在将点 {name} 插入sections表'
             curd.insert_point(
                 id=section_id,
@@ -71,12 +85,11 @@ class Crawer(object):
                 longitude=float(point["value"][0]),
                 latitude=float(point["value"][1])
             )
-            """
-            for formation_id in point["formation_ids"].split(","):# 生成映射关系
+
+            for formation_id in point["formation_ids"].split(","):  # 生成映射关系
                 progress_bar_wrapper.text = f'-> 正在将映射 {section_id} to {formation_id} 插入sections表'
                 curd.insert_section_formation_mapping(
                     section_id=section_id, formation_id=int(formation_id))
-            """
 
     def fetch_formations(self, id_list: list[int]):
         """"利用分页接口批量获取formation数据(一页获取所有)"""
@@ -86,7 +99,7 @@ class Crawer(object):
             ids), 'page': 1, "pageSize": length}  # 分页接口参数
         # print(payload)
         time.sleep(self.anti_block_interval)  # 防止屏蔽
-        formations = self.http_get(self.formations_url,payload)
+        formations = self.http_get(self.formations_url, payload)
         # print(formations)
         assert int(formations['total']) == int(
             formations['pageSize'])  # 确保接口返回没问题
@@ -102,7 +115,8 @@ class Crawer(object):
             formation_id = result['formation_id']
             print(
                 f"正在获取完整地址 url:{self.section_url}?formation_id={formation_id}")
-            section = self.http_get(f"{self.section_url}?formation_id={formation_id}")["result"][0]
+            section = self.http_get(f"{self.section_url}?formation_id={formation_id}")[
+                "result"][0]
             result["geology_location"] = section["geology_location"]
             result["geology_locality"] = section["geology_locality"]
             """
@@ -166,7 +180,7 @@ class Crawer(object):
                         thick_unit=formation['formation_thick_unit'],
                         conta_base=formation['formation_conta_base'],
                         paleoenvironment=formation['formation_paleoenvironment'],
-                        accessibility=formation['accessibility'],
+                        # accessibility=formation['accessibility'],
                         release_date=formation['release_date'],
                         early_interval=formation['early_interval'],
                         intage_max=formation['intage_max'],
@@ -190,8 +204,8 @@ class Crawer(object):
         while True:
             payload = {'formation_id': formation_id,
                        'page': page,
-                       "pageSize": self.fetch_units_page_size}
-            result = self.http_get(self.units_url,payload)
+                       "pageSize": self.fetch_page_size}
+            result = self.http_get(self.units_url, payload)
             units.extend(result['result'])
             if len(units) == result["total"]:  # 全了则跳出循环
                 break
@@ -233,11 +247,119 @@ class Crawer(object):
                     late_age=float(unit['late_age'])
                 )
 
+    def fetch_collections(self, formation_id, unit_id):
+        """通过分页接口获取collections"""
+        page = 1  # 初始页
+        collections = []  # 初始化空列表
+        time.sleep(self.anti_block_interval)  # 每次请求间隔1秒
+        while True:
+            payload = {'formation_id': formation_id,
+                       'unit_id': unit_id,
+                       'page': page,
+                       "pageSize": self.fetch_page_size}
+            result = self.http_get(self.collections_url, payload)
+            collections.extend(result['result'])
+            if len(collections) == result["total"]:  # 全了则跳出循环
+                break
+            page += 1  # 页数自增
+            time.sleep(self.anti_block_interval)  # 每次请求间隔1秒
+        return collections
+
+    def save_collections(self):
+        """collection数据入库"""
+        assert self.units
+        print('\nStep 4: 正在解析所有collection...')
+        print("由于并发限制，请耐心等待")
+        progress_bar_wrapper = alive_it(self.units, dual_line=True)  # 创建进度条
+        self.collections = []
+        for unit in progress_bar_wrapper:  # 遍历所有unit
+            collections = self.fetch_collections(
+                unit['formation_id'], unit['unit_id'])
+            self.collections.extend(collections)
+            for collection in collections:
+                id = collection['coll_id']
+                progress_bar_wrapper.text = f'-> 正在将 collection id: {id} 插入collections表'
+                curd.insert_collection(
+                    id=id,
+                    unit_id=collection['unit_id'],
+                    no=collection['coll_no'],
+                    depth_lower=float(collection['coll_depthlower']),
+                    depth_upper=float(collection['coll_depthupper']),
+                    thick_unit=collection['coll_thicknessunit'],
+                    precision=collection['coll_precision'],
+                    preservation=collection['coll_preservation'],
+                    preservations=collection['coll_preservations'],
+                    biominerals=collection['coll_biominerals'],
+                    minerals=collection['coll_minerals'],
+                    occurrence=collection['coll_occurrence'],
+                    tmporal=collection['coll_tmporal'],
+                    resolution=collection['coll_resolution'],
+                    type=collection['coll_type'],
+                    concentration=collection['coll_concentration'],
+                    orientation=collection['coll_orientation'],
+                    detail=collection['coll_detail'],
+                    sediment=collection['coll_sediment'],
+                    sorting=collection['coll_sorting'],
+                    fragmentation=collection['coll_fragmentation'],
+                    bioerosion=collection['coll_Bioerosion'],
+                    encrustation=collection['coll_Encrustation'],
+                    classes=collection['coll_classes'],
+                    traces=collection['coll_traces'],
+                    components=collection['coll_components'],
+                    # accessibility=collection['accessibility'],
+                    release_date=collection['release_date'],
+                    formation_id=int(collection['formation_id'])
+                )
+
+    def fetch_fossils(self, collection_id):
+        """通过分页接口获取fossils"""
+        page = 1  # 初始页
+        fossils = []
+        time.sleep(self.anti_block_interval)  # 每次请求间隔
+        while True:
+            payload = {'collection_id': collection_id,
+                       'page': page,
+                       "pageSize": self.fetch_page_size}
+            result = self.http_get(self.fossils_url, payload)
+            fossils.extend(result['result'])
+            if len(fossils) == result["total"]:  # 爬全了则跳出循环
+                break
+            page += 1  # 页数自增
+            time.sleep(self.anti_block_interval)
+        return fossils
+
+    def save_fossils(self):
+        """fossil数据入库"""
+        assert self.collections
+        print('\nStep 5: 正在解析所有fossil...')
+        print("由于并发限制，请耐心等待")
+        progress_bar_wrapper = alive_it(self.collections, dual_line=True)
+        self.fossils = []
+        for collection in progress_bar_wrapper:
+            fossils = self.fetch_fossils(collection['coll_id'])
+            self.fossils.extend(fossils)
+            for fossil in fossils:
+                id = fossil['id']
+                progress_bar_wrapper.text = f'-> 正在将 fossil id: {id} 插入fossils表'
+                curd.insert_fossil(
+                    id=id,
+                    section_id=fossil['section_basic_id'],
+                    collection_id=fossil['collection_id'],
+                    no=str(fossil['fossil_no']),
+                    percision=fossil['precision'],
+                    taxon_name1=fossil['taxon_name1'],
+                    taxon_name2=fossil['taxon_name2'],
+                    group=fossil['fossil_group'],
+                    type=fossil['taxon_type'],
+                )
+
     def run(self):
         self.fetch_points()
         self.save_points()
         self.save_formations()
         self.save_units()
+        self.save_collections()
+        self.save_fossils()
         print('\nDone! 操作全部完成!')
 
 

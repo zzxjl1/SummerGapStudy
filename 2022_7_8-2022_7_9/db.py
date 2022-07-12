@@ -25,6 +25,8 @@ def validate_float(value):
 def validate_string(value):
     if value is not None:
         assert isinstance(value, str)
+    else:
+        value = ""
     return value
 
 
@@ -95,7 +97,7 @@ class Formation(Base):
     thick_unit = Column(TEXT)
     conta_base = Column(TEXT)
     paleoenvironment = Column(TEXT)
-    accessibility = Column(INTEGER)
+    #accessibility = Column(INTEGER)
     release_date = Column(TEXT)
     early_interval = Column(TEXT)
     intage_max = Column(TEXT)
@@ -111,14 +113,14 @@ class Formation(Base):
     section = relationship("Section", back_populates="formations")
     units = relationship("Unit", back_populates="formations")
 
-"""
+
 class SectionFormationMapping(Base):
     __tablename__ = 'section_formation_mapping'
 
     section_id = Column(INTEGER, ForeignKey('sections.id'), primary_key=True)
     formation_id = Column(INTEGER, ForeignKey(
         'formations.id'), primary_key=True)
-"""
+
 
 class Unit(Base):
 
@@ -126,7 +128,8 @@ class Unit(Base):
 
     id = Column(INTEGER, primary_key=True)
     no = Column(INTEGER)
-    formation_id = Column(INTEGER, ForeignKey('formations.id'), primary_key=True)
+    formation_id = Column(INTEGER, ForeignKey(
+        'formations.id'), primary_key=True)
     #ref_id = Column(INTEGER)
     section_id = Column(INTEGER, ForeignKey('sections.id'))
     sum = Column(REAL)
@@ -143,6 +146,57 @@ class Unit(Base):
 
     formations = relationship("Formation", back_populates="units")
     section = relationship("Section", back_populates="units")
+
+
+class Collection(Base):
+
+    __tablename__ = 'collections'
+
+    id = Column(INTEGER, primary_key=True)
+    #ref_id = Column(INTEGER)
+    unit_id = Column(INTEGER, ForeignKey('units.id'))
+    no = Column(TEXT)
+    depth_lower = Column(REAL)
+    depth_upper = Column(REAL)
+    thick_unit = Column(TEXT)
+    precision = Column(TEXT)
+    preservation = Column(TEXT)
+    preservations = Column(TEXT)
+    biominerals = Column(TEXT)
+    minerals = Column(TEXT)
+    occurrence = Column(TEXT)
+    tmporal = Column(TEXT)
+    resolution = Column(TEXT)
+    type = Column(TEXT)
+    concentration = Column(TEXT)
+    orientation = Column(TEXT)
+    detail = Column(TEXT)
+    sediment = Column(TEXT)
+    sorting = Column(TEXT)
+    fragmentation = Column(TEXT)
+    bioerosion = Column(TEXT)
+    encrustation = Column(TEXT)
+    classes = Column(TEXT)
+    traces = Column(TEXT)
+    components = Column(TEXT)
+    #accessibility = Column(INTEGER)
+    release_date = Column(TEXT)
+    formation_id = Column(INTEGER, ForeignKey('formations.id'))
+
+
+class Fossil(Base):
+
+    __tablename__ = 'fossils'
+
+    id = Column(INTEGER, primary_key=True)
+    section_id = Column(INTEGER, ForeignKey('sections.id'))
+    collection_id = Column(INTEGER, ForeignKey('collections.id'))
+    no = Column(TEXT)
+    percision = Column(TEXT)
+    taxon_name1 = Column(TEXT)
+    taxon_name2 = Column(TEXT)
+    group = Column(TEXT)
+    type = Column(TEXT)
 
 
 path = os.path.abspath(__file__)  # 获取当前文件的绝对路径
