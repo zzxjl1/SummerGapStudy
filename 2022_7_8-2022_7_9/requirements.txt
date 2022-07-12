@@ -1,3 +1,4 @@
 sqlalchemy
 requests
 alive_progress
+faker
