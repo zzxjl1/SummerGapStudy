@@ -5,6 +5,8 @@ import requests
 from alive_progress import alive_it
 import curd
 from faker import Faker
+from retrying import retry
+
 fake = Faker()
 
 
@@ -26,7 +28,7 @@ class Crawer(object):
         self.units = None  # 所有出现在foramtions中的unit
         self.collections = None  # 所有出现在units中的collection
         self.fossils = None  # 所有出现在collections中的fossil
-        self.anti_block_interval = .6  # 请求间隔时间
+        self.anti_block_interval = .5  # 请求间隔时间
         self.block_recover_interval = 10  # 等待屏蔽恢复的间隔时间
 
         curd.flush()  # 初始化数据库（清空）
@@ -39,6 +41,7 @@ class Crawer(object):
 
         return headers
 
+    @retry(wait_fixed=10*1000)
     def http_get(self, url, params=None):
         """通用get请求"""
         while True:
@@ -46,7 +49,7 @@ class Crawer(object):
                 response = requests.get(
                     url, params=params, timeout=self.timeout, headers=self.get_headers())
                 return response.json()
-            except requests.JSONDecodeError:
+            except requests.exceptions.JSONDecodeError:
                 if "RAYCC" in response.text:
                     time.sleep(self.block_recover_interval)
             except Exception as e:
@@ -58,7 +61,7 @@ class Crawer(object):
         """获取网页http://geobiodiversity.com/上绘制的所有点"""
         print('正在获取点数据...')
         try:
-            self.points = self.http_get(self.points_url)[:10]  # debug only
+            self.points = self.http_get(self.points_url)  # [:10]  # debug only
             print('获取点数据成功！')
         except Exception as e:
             print('获取点数据失败：', e)
