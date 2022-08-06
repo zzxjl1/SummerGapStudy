@@ -5,7 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 USER_NAME = 'aisee'
-PASSWORD = 'EPJs8dGpNkKprGkP'
+PASSWORD = ''
 HOST = 'idealbroker.cn'
 PORT = '3306'
 DATABASE = 'aisee'
